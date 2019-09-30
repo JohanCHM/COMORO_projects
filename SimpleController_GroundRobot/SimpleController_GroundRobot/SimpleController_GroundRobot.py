@@ -62,6 +62,21 @@ tjt = np.zeros((2,t))
 #	# y(t) = x(t) = y0 + v * t
 #	tjt[:,x] = x
 
+
+# Circular
+#xCenter = t/4
+#yCenter = 0
+#radius = t/4
+
+#for x in range(0,int(xCenter + radius)):
+#	tjt[0,x] = x
+#	tjt[1,x] = math.sqrt(abs(radius**2-(tjt[0,x]-xCenter)**2))+yCenter
+
+#for x in range(int(xCenter + radius), t):
+#	tjt[0,x] = 2 * (xCenter + radius) - x
+#	tjt[1,x] = -math.sqrt(abs(radius ** 2 - (tjt[0,x] - xCenter) ** 2)) + yCenter
+
+
 # - TODO: Semisinusoid
 xCenter = t/8
 yCenter = 0
@@ -70,24 +85,24 @@ radius = t/8
 for x in range(int(t/4)):
 	tjt[0,x] =x
 	#(x−a)2 + (y−b)2 = r2
-	tjt[1,x] =math.sqrt(abs((x-xCenter) ** 2 - radius**2)) + yCenter
+	tjt[1,x] =math.sqrt(abs((tjt[0,x]-xCenter) ** 2 - radius**2)) + yCenter
 
 xCenter = t / 8 + t / 4
 for x in range(int(t/4),int(t/2)):
 	tjt[0,x] =x
 	#(x−a)2 + (y−b)2 = r2
-	tjt[1,x] =-math.sqrt(abs((x-xCenter) ** 2 - radius**2)) + yCenter
+	tjt[1,x] =-math.sqrt(abs((tjt[0,x]-xCenter) ** 2 - radius**2)) + yCenter
 
 for x in range(int(t/2),int(t/2+t/4)):
 	tjt[0,x] = t - x
 	#(x−a)2 + (y−b)2 = r2
-	tjt[1,x] =math.sqrt(abs((t-x-xCenter) ** 2 - radius**2)) + yCenter
+	tjt[1,x] =math.sqrt(abs((tjt[0,x]-xCenter) ** 2 - radius**2)) + yCenter
 
 xCenter = t/8
 for x in range(int(t/2+t/4),t):
 	tjt[0,x] = t - x
 	#(x−a)2 + (y−b)2 = r2
-	tjt[1,x] =-math.sqrt(abs((t-x-xCenter) ** 2 - radius**2)) + yCenter
+	tjt[1,x] =-math.sqrt(abs((tjt[0,x]-xCenter) ** 2 - radius**2)) + yCenter
 # - TODO: Square
 # - TODO: Square rounded corners
 
@@ -100,7 +115,7 @@ rab = calculateRAB(rp[:,0],tjt[:,0])
 
 for x in range(1, t):
 	#Calculate next x, y and theta
-	x_nxt = rp[0,-1] + kr * rab[0,-1] * math.cos(-rp[2,-1])
+	x_nxt = rp[0,-1] + kr * rab[0,-1] * math.cos(rp[2,-1])
 	y_nxt = rp[1,-1] + kr * rab[0,-1] * math.sin(rp[2,-1])
 	t_nxt = rp[2,-1] + (ka * rab[1,-1] +kb*rab[2,-1])
 	
@@ -143,7 +158,7 @@ fig.set_dpi(100)
 fig.set_size_inches(15, 15)
 
 #ax_anim = plt.axes(xlim=(0, t), ylim=(0, t))	#linear
-ax_anim = plt.axes(xlim=(-10, t/2), ylim=(-t/4, t/4))	#semisinusoid
+ax_anim = plt.axes(xlim=(-10, t), ylim=(-t,t))	#semisinusoid
 
 plt.title("Robot movement trying to follow the path") 
 
