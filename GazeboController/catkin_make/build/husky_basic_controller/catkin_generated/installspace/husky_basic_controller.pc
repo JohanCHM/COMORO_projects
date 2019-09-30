@@ -1,0 +1,8 @@
+prefix=/home/carlos/COMORO_projects/GazeboController/catkin_make/install
+
+Name: husky_basic_controller
+Description: Description of husky_basic_controller
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/carlos/COMORO_projects/GazeboController/catkin_make/install/lib 
+Requires: 
