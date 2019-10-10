@@ -17,6 +17,11 @@
     with the structure (in the following structure replace the maze2.world with your world.)
 
     ```xml
+    <?xml version="1.0"?>
+    <!--
+    \file      husky_empty_world.launch
+    \authors   Paul Bovbel <pbovbel@clearpathrobotics.com, Devon Ash <dash@clearpathrobotics.com>
+    -->
     <launch>
 
         <arg name="laser_enabled" default="true"/>
