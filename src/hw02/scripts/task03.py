@@ -97,7 +97,6 @@ class MonitorGpsRobot:
         self.currentLongitude = message.longitude
         self.currentAltitude = message.altitude
 
-        self.rate.sleep()
 
     def robotController(self, message):
         """"Function to control the robot"""
