@@ -1,5 +1,19 @@
 #!/usr/bin/env python
 
+# ====================================================================
+#  HW02-Task03: Script to track the IMU data sensor 
+# ====================================================================
+# Scrippt to:
+#  * Keep track of the sensor data from a gps
+#  * Capture the data from the GPS sensor once the robot have reach an specific position into a csv file
+#  * Controll the robot to move across an environment following the waypoints given
+# 
+#   This program was also used in "HW02-Task04: Watch the camera feed" and
+#   "HW02-Task05: Visualize the scanner data"
+#
+# author: Carlos Hansen Mendoza <carlos.hansen@post.au.dk>
+# date: october-2019
+
 import rospy
 import tf               # for doing angular transformations#
 import sensor_msgs.msg  # for the manipulation of sensor data

@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+# ====================================================================
+#  HW02-Task01: Script to track the poses of a Husky robot
+# ====================================================================
+
+#
+# author: Carlos Hansen Mendoza <carlos.hansen@post.au.dk>
+# date: october-2019
+
 import rospy
 import tf               # for doing angular transformations
 import nav_msgs.msg     # for the manipulation of navigation data
