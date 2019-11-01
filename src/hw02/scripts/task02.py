@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+# ====================================================================
+#  HW02-Task02: Script to track the IMU data sensor 
+# ====================================================================
+# Scrippt to:
+#  * Capture the data from the IMU sensor of a robot into a csv file
+#  * Controll the robot to move across an environment following the waypoints 
+#    given
+#
+# author: Carlos Hansen Mendoza <carlos.hansen@post.au.dk>
+# date: october-2019
+
 import rospy
 import tf               # for doing angular transformations#
 import sensor_msgs.msg  # for the manipulation of sensor data
@@ -62,7 +73,7 @@ class MonitorImuRobot:
         self.cmdPub = rospy.Publisher(
             '/cmd_vel', geometry_msgs.msg.Twist, queue_size=10)
 
-        # every time the ofometry filtered is received the control parameters get updated
+        # every time the odometry filtered is received the control parameters get updated
         self.poseForControlSubscriber = rospy.Subscriber(
             'odometry/filtered', nav_msgs.msg.Odometry, self.robotController)
 
