@@ -1,19 +1,17 @@
+
 import numpy as np
 
 class PID:
-    """
-    PID controler for a 3 element vector
+    """PID controller for a 3 element vector
     
-    Attributes
-    ----------
-    Kp : numpy.ndarray<float>[1,3]
-        Set of constants for the Proportional part of the controller
-    Ki : numpy.ndarray<float>[1,3]
-        Set of constants for the Integral part of the controller
-    Kd : npArray<float>[1,3]
-        Set of constants for the Derivative part of the controller
-    setPoint : npArray<float>[1,3]
-        Desired point i=to reach for the PID controller
+    @ivar Kp: Set of constants for the Proportional part of the controller
+    @type Kp: numpy.ndarray(1_3)
+    @ivar Kp: Set of constants for the Integral part of the controller
+    @type Kp: numpy.ndarray(1_3)
+    @ivar Kp: Set of constants for the Derivative part of the controller
+    @type Kp: numpy.ndarray(1_3)
+    @ivar setPoint: Desired point to reach for the PID controller
+    @type setPoint: numpy.ndarray(1_3)
 
     Methods
     -------
@@ -22,95 +20,158 @@ class PID:
     """
 
 
-    def __init__(self,PX=1.0, PY=1.0, PZ=1.0,IX=0.0, IY=0.0, IZ=0.0,DX=0.0, DY=0.0, DZ=0.0):
-        """Constructor for the PID contoller
-        
-        @param PX: Este es el que quiero constant for the X (default: {1.0})        
+    def __init__(self,P=np.array([1.0,1.0,1.0]),I=np.array([0.0,0.0,0.0]),D=np.array([0.0,0.0,0.0]),):
+        """Initialize the controller
+
+        @param P: Proportional constant (default: {[1.0,1.0,1.0]})
+        @type P: numpy.ndarray(1_3)
+        @param I: Integral constant (default: {[0.0,0.0,0.0]})
+        @type I: numpy.ndarray(1_3)
+        @param D: Derivative constant (default: {0.0,0.0,0.0})
+        @type D: numpy.ndarray(1_3)
         """
-
-
-    # PY {float} -- Proportional constant for the Y (default: {1.0})
-    #         PZ {float} -- Proportional constant for the Z (default: {1.0})
-    #         IX {float} -- Integral constant for the X (default: {0.0})
-    #         IY {float} -- Integral constant for the Y (default: {0.0})
-    #         IZ {float} -- Integral constant for the Z (default: {0.0})
-    #         DX {float} -- Derivative constant for the X (default: {0.0})
-    #         DY {float} -- Derivative constant for the Y (default: {0.0})
-    #         DZ {float} -- Derivative constant for the Z (default: {0.0})
-        self.Kp = np.array([PX, PY, PZ])
-        self.Ki = np.array([IX, IY, IZ])
-        self.Kd = np.array([DX, DY, DZ])
+        self.Kp = P
+        self.Ki = I
+        self.Kd = D
 
         self.setPoint = 0.0  # Default set point to the origin
-        self.error = None   # Initial error
+        self.error = np.array([0.0,0.0,0.0])   # Initial error
 
-        self.derivator = 0    # Initialize variable to store the derivation
-        self.integrator = 0   # Initialize the variable to store the integration
+        self.setDerivative(0)   # Initialize variable to store the derivation
+        self.setIntegral(0)   # Initialize the variable to store the integration
 
-    def controll(self, currentVector,bla):
-        """Prueba
-        
-        Arguments:
-            currentVector {Int} -- [description]
-            bla {[type]} -- [description]
-        
-        Returns:
-            [type] -- [description]
+    def controll(self, currentVector):
+        """Get the controlled output depending on the currentVector
+
+        @param currentVector: Current vector to move to the setPoint
+        @type currentVector: numpy.ndarray(1_3)
+        @returns: Controlled Output
+        @rtype: numpy.ndarray(1_3)
         """
 
-        self.error = self.setPoint - currentVector
+        self.error = np.subtract(self.setPoint, currentVector)
 
-        self.P_value = self.Kp * self.error
-        self.D_value = self.Kd * (self.error - self.Derivator)
-        self.Derivator = self.error
+        # Proportional part
+        self.pComponent = np.transpose(self.Kp) * self.error
 
-        self.Integrator = self.Integrator + self.error
+        # Derivative part`
+        # self.dComponent = np.transpose(self.Kd) * (self.error - self.derivative)/ deltaT
+        self.dComponent = np.transpose(self.Kd) * (self.error - self.derivative)
+        self.derivative = self.error
 
-        if self.Integrator > self.Integrator_max:
-            self.Integrator = self.Integrator_max
-        elif self.Integrator < self.Integrator_min:
-            self.Integrator = self.Integrator_min
+        # Integral part
+        self.integral = self.integral + self.error
+        self.iComponent = np.transpose(self.Ki) * self.integral
 
-        self.I_value = self.Integrator * self.Ki
-
-        PID = self.P_value + self.I_value + self.D_value
+        PID = self.pComponent + self.iComponent + self.dComponent
 
         return PID
 
-	# def setPoint(self,set_point):
-	# 	"""
-	# 	Initilize the setpoint of PID
-	# 	"""
-	# 	self.set_point = set_point
-	# 	self.Integrator=0
-	# 	self.Derivator=0
 
-	# def setIntegrator(self, Integrator):
-	# 	self.Integrator = Integrator
+    # ----------- Setters and Getters
 
-	# def setDerivator(self, Derivator):
-	# 	self.Derivator = Derivator
+	def setPoint(self,setPoint):
+		""" Initilize the setPoint of PID
 
-	# def setKp(self,P):
-	# 	self.Kp=P
+        @param currentVector: Current vector to move to the setPoint
+        @type currentVector: numpy.ndarray(1_3)
+		"""
+		self.setPoint = setPoint
+		self.setDerivative(0)   # Initialize variable to store the derivation to 0
+        self.setIntegral(0)   # Initialize the variable to store the integration to 0
 
-	# def setKi(self,I):
-	# 	self.Ki=I
+    def getPoint(self):
+        """ Get the current value of the Setpoint
 
-	# def setKd(self,D):
-	# 	self.Kd=D
+        @returns: Current value of the Setpoint
+        @rtype: numpy.ndarray(1_3)
+		"""
+		return self.set_point
 
-	# def getPoint(self):
-	# 	return self.set_point
+	def setIntegral(self, integral):
+        """ Set the Integer to the desired value
 
-	# def getError(self):
-	# 	return self.error
+        @param integral: New value for the Integer
+        @type integral: numpy.ndarray(1_3)
+		"""
+		self.integral = integral
 
-	# def getIntegrator(self):
-	# 	return self.Integrator
+    def getIntegral(self):
+        """ Get the current value of the Integer
 
-	# def getDerivator(self):
-	# 	return self.Derivator
+        @returns: Current value for the Integer
+        @rtype: numpy.ndarray(1_3)
+		"""
+		return self.integral
 
+	def setDerivative(self, derivative):
+        """ Set the Derivative to the desired value
 
+        @param derivative: New value for the Derivative
+        @type derivative: numpy.ndarray(1_3)
+		"""
+		self.derivative = derivative
 
+	def getDerivative(self):
+        """ Get the current value of the derivative
+
+        @returns: Current value for the derivative
+        @rtype: numpy.ndarray(1_3)
+		"""
+		return self.derivative
+
+	def setKp(self,P):
+        """ Set the Proportional Constants to the desired value
+
+        @param P: New value for the Proportional constants
+        @type P: numpy.ndarray(1_3)
+		"""
+		self.Kp=P
+
+    def getKp(self):
+        """ Get the Proportional Constants
+
+        @returns: Proportional constants
+        @rtype: numpy.ndarray(1_3)
+		"""
+		return self.Kp
+
+	def setKi(self,I):
+        """ Set the Integral Constants to the desired value
+
+        @param I: New value for the Integral constants
+        @type I: numpy.ndarray(1_3)
+		"""
+		self.Ki=I
+    
+    def getKi(self):
+        """ Get the Integral Constants
+
+        @returns: Integral constants
+        @rtype: numpy.ndarray(1_3)
+		"""
+		return self.Ki
+
+	def setKd(self,D):
+        """ Set the Derivative Constants to the desired value
+
+        @param D: New value for the Derivative constants
+        @type D: numpy.ndarray(1_3)
+		"""
+		self.Kd=D
+
+    def getKd(self):
+        """ Get the Derivative Constants
+
+        @returns: Derivative constants
+        @rtype: numpy.ndarray(1_3)
+		"""
+		return self.Kd
+
+	def getError(self):
+        """ Get the Last error from the controller
+
+        @returns: error
+        @rtype: numpy.ndarray(1_3)
+		"""
+		return self.error

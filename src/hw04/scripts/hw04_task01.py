@@ -1,7 +1,8 @@
-from hw04_PID import PID
 
+from PID import PID 
 import numpy as np
 
 
-np.arrray
-hola = PID(2,)
+hola = PID()
+
+hola.controll()
