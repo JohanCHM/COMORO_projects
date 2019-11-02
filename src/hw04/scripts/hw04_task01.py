@@ -27,18 +27,18 @@ class OdometryDrone:
         #----- Modifiable Parameters
         # PID controller
         # Proportional parameters XYZrpy
-        kp = np.array([0.05, 0.05, 0.2, 0, 0, 0.2])
+        kp = np.array([0.05, 0.05, 0.2, 0, 0, 0])
         # Integral parameters XYZrpy
-        ki = np.array([0.05, 0.05, 0.2, 0, 0, 0.2])
+        ki = np.array([1, 1, 1, 0, 0, 1])
         # Proportional parameters XYZrpy
-        kd = np.array([0.05, 0.05, 0.2, 0, 0, 0.2])
+        kd = np.array([1, 1, 1, 0, 0, 1])
 
         samplingTime = 0.1  # 100 [ms]
 
-        self.waypoints = [[0, 0, 2, 30],
-                          [0, 6, 2, 30],
-                          [6, 6, 2, 45],
-                          [6, 0, 2, 60]]
+        self.waypoints = [np.array([0, 0, 2, 0, 0, np.deg2rad(30)]),
+                          np.array([0, 6, 2, 0, 0, np.deg2rad(0)]),
+                          np.array([6, 6, 2, 0, 0, np.deg2rad(45)]),
+                          np.array([6, 0, 2, 0, 0, np.deg2rad(60)])]
 
         self.freqTopic = 10  # Frequency of topic messages
 
@@ -48,10 +48,14 @@ class OdometryDrone:
         self.fileName = "hw04_task01.csv"    # Name of the file to save the data
 
         # ----- Initialization stage
-        self.controller = PID(kp, ki, kd, samplingTime)  # controller
+        self.controller = PID()  # controller
+        self.controller.setKp(kp)
+        # self.controller.setKi(ki)
+        # self.controller.setKd(kd)
+        self.controller.setSamplingTime(samplingTime)
 
-        self.currentGoal = self.waypoints[0]   # Waypoint to reach
         self.waypointIndex = 0      # Index to track current waypoints
+        self.controller.setSetPoint(self.waypoints[self.waypointIndex])
 
         # List to have a mean of messages to make sure the distance do not oscillate much
         self.thresholdList = collections.deque(
@@ -76,13 +80,13 @@ class OdometryDrone:
             '/bebop/cmd_vel', geometry_msgs.msg.Twist, queue_size=10)
 
         # ------ Getting the initial parameters of the drone
-        # initialOdom = rospy.wait_for_message(
-        #     'bebop/odom', nav_msgs.msg.Odometry,)
-        # initialInertialCoord = self.odometryMsg2InertialCoordinates(
-        #     initialOdom)
+        initialOdom = rospy.wait_for_message(
+            'bebop/odom', nav_msgs.msg.Odometry,)
+        initialInertialCoord = self.odometryMsg2InertialCoordinates(
+            initialOdom)
 
         # angle between body and bebop orientation
-        # self.bebopAngled = initialInertialCoord[3]
+        self.bebopAngled = initialInertialCoord[3]
 
         # ------ Visualization of trajectories for RVIZ
         # self.rvizMsg = nav_msgs.msg.Odometry()
@@ -99,8 +103,8 @@ class OdometryDrone:
 
         # ------ Update target
         # Subscriber to check if the corner had been reach and change the goal corner to go
-        # self.poseForPathSubscriber = rospy.Subscriber(
-        #     'bebop/odom', nav_msgs.msg.Odometry, self.controlGoal)
+        self.poseForPathSubscriber = rospy.Subscriber(
+            'bebop/odom', nav_msgs.msg.Odometry, self.controlGoal)
 
         # ------ Drone commands
 
@@ -108,11 +112,11 @@ class OdometryDrone:
         self.takeoff(5)
 
         # every time the odometry filtered is received the control parameters get updated
-        # while not rospy.is_shutdown():
-        #     # print("----")
-        #     self.poseForControlSubscriber = rospy.Subscriber(
-        #         'bebop/odom', nav_msgs.msg.Odometry, self.droneController)
-        #     self.rate.sleep()
+        while not rospy.is_shutdown():
+            print("----")
+            self.poseForControlSubscriber = rospy.Subscriber(
+                'bebop/odom', nav_msgs.msg.Odometry, self.droneController)
+            self.rate.sleep()
 
         # Land
         # self.land(10)
@@ -159,65 +163,62 @@ class OdometryDrone:
             landPub.publish(std_msgs.msg.Empty())
             self.rate.sleep()
 
-    # def droneController(self, message):
-    #     """"Control the drone"""
+    def droneController(self, message):
+        """"Control the drone"""
 
-    #     dronePosInertial = self.odometryMsg2InertialCoordinates(message)
+        dronePosInertial = self.odometryMsg2InertialCoordinates(message)
 
-    #     # Calculate the error
-    #     rhoX = self.currentGoal[0] - dronePosInertial[0]
-    #     rhoY = self.currentGoal[1] - dronePosInertial[1]
-    #     rhoZ = self.currentGoal[2] - dronePosInertial[2]
+        # print(dronePosInertial)
 
-    #     psiRad = self.currentGoal[3] * math.pi / 180
+        ctrlOutput = self.controller.controll(dronePosInertial, rospy.Time.now().to_time())
 
-    #     rhoPsi = psiRad - dronePosInertial[3]
+        # Create command
 
-    #     # Create command
-    #     self.cmdMsg.linear.x = self.kxy * rhoX
-    #     self.cmdMsg.linear.y = self.kxy * rhoY
-    #     self.cmdMsg.linear.z = self.kz * rhoZ
-    #     self.cmdMsg.angular.z = self.kPsi * rhoPsi
+        if ctrlOutput is not None :
+            self.cmdMsg.linear.x = ctrlOutput[0]
+            self.cmdMsg.linear.y = ctrlOutput[1]
+            self.cmdMsg.linear.z = ctrlOutput[2]
+            self.cmdMsg.angular.z = ctrlOutput[5]
 
-    #     # Publish
-    #     self.cmdPub.publish(self.cmdMsg)
+            # Publish
+            self.cmdPub.publish(self.cmdMsg)
 
-    # def controlGoal(self, message):
-    #     """Measure the current distance to the goal and if reached, update the next goal. Then save it to an CSV file"""
+    def controlGoal(self, message):
+        """Measure the current distance to the goal and if reached, update the next goal. Then save it to an CSV file"""
 
-    #     dronePosInertial = self.odometryMsg2InertialCoordinates(message)
+        dronePosInertial = self.odometryMsg2InertialCoordinates(message)
 
-    #     distance = math.sqrt((dronePosInertial[0]-self.currentGoal[0]) ** 2
-    #                          + (dronePosInertial[1]-self.currentGoal[1]) ** 2
-    #                          + (dronePosInertial[2]-self.currentGoal[2]) ** 2)
+        distance = math.sqrt((dronePosInertial[0]-self.controller.getSetPoint()[0]) ** 2
+                             + (dronePosInertial[1]-self.controller.getSetPoint()[1]) ** 2
+                             + (dronePosInertial[2]-self.controller.getSetPoint()[2]) ** 2)
 
-    #     self.thresholdList.append(distance)  # Save into the list
+        self.thresholdList.append(distance)  # Save into the list
 
-    #     if self.thresholdList > 0:
-    #         average = sum(self.thresholdList) / len(self.thresholdList)
+        if self.thresholdList > 0:
+            average = sum(self.thresholdList) / len(self.thresholdList)
 
-    #     if (average < self.inReach):
-    #         self.waypointIndex = self.waypointIndex + 1
-    #         if (self.waypointIndex >= len(self.waypoints)):
-    #             self.waypointIndex = 0
-    #         self.currentGoal = self.waypoints[self.waypointIndex]
+        if (average < self.inReach):
+            self.waypointIndex = self.waypointIndex + 1
+            if (self.waypointIndex >= len(self.waypoints)):
+                self.waypointIndex = 0
+            self.controller.setSetPoint(self.waypoints[self.waypointIndex])
 
-    #     print("X:{x} Y:{y} Z: {r} PSI:{p}".format(
-    #         x=dronePosInertial[0], y=dronePosInertial[1], r=dronePosInertial[2], p=(dronePosInertial[3]*180/math.pi)))
-    #     print("Goal: {g} Average Distance: {a} Distances averaged: {l}".format(
-    #         g=self.currentGoal, a=average, l=len(self.thresholdList)))
+        print("X:{x} Y:{y} Z: {r} PSI:{p}".format(
+            x=dronePosInertial[0], y=dronePosInertial[1], r=dronePosInertial[2], p=(dronePosInertial[3]*180/math.pi)))
+        print("Goal: {g} Average Distance: {a} Distances averaged: {l}".format(
+            g=self.controller.getSetPoint(), a=average, l=len(self.thresholdList)))
 
-    #     # Saving to file
+        # Saving to file
 
-    #     dronePosInertial.append(distance)
-    #     dataToSave = dronePosInertial
+        # dronePosInertial.append(distance)
+        dataToSave = dronePosInertial
 
-    #     # print(dataToSave)
+        # print(dataToSave)
 
-    #     with open(self.fileName, mode='a') as data_file:
-    #         file_writter = csv.writer(
-    #             data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    #         file_writter.writerow(dataToSave)
+        with open(self.fileName, mode='a') as data_file:
+            file_writter = csv.writer(
+                data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            file_writter.writerow(dataToSave)
 
     # def robotPosOr(self, message):
     #     """Visualization of the odometry nav msgs/Odometry"""
@@ -281,11 +282,11 @@ class OdometryDrone:
                              [sp*st*cs-cp*ss, sp*st*ss+cp*cs, sp*ct],
                              [cp*st*cs+sp*ss, cp*st*ss-sp*cs, cp*ct]])
 
-        dronePosInertial = transMat * np.transpose(dronePos)    # Drone coordinates in body coordinates
+        dronePosInertial = transMat.dot(np.transpose(dronePos))     # Drone coordinates in body coordinates
 
-        np.concatenate((dronePosInertial,np.array([[phi],[theta],[psi]])),axis=1)
+        dronePosInertialWAng = np.concatenate([dronePosInertial,np.array([phi,theta,psi])])
 
-        return 
+        return dronePosInertialWAng
 
 
 ########################################

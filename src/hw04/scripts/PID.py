@@ -61,28 +61,38 @@ class PID:
         """
 
         deltaTime = currentTime - self.getLastTime()
+        # print ("LastT: {0}".format(self.getLastTime()))
+        # print ("CurrentT: {0}".format(currentTime))
+        # print ("delta: {0}".format(deltaTime))
+
 
         error = self.setPoint - currentVector
         deltaError = error - self.getLastError()
 
+        # print ("Target: {0}".format(self.setPoint))
+        # print ("Current: {0}".format(currentVector))
+
         if (deltaTime >= self.getSamplingTime()):
             # Proportional part
-            self.pComponent = np.transpose(self.Kp) * self.error
+            self.pComponent = np.multiply(self.Kp, error)
 
             # Integral part
-            self.integral += error * deltaTime  #FIXME: make sure of how the time is used
-            self.iComponent = np.transpose(self.Ki) * self.integral
+            self.integral += error * deltaTime 
+            self.iComponent = np.multiply(self.Ki, self.integral)
 
             # Derivative part
             self.dComponent = 0
             if (deltaTime > 0):
-                self.dComponent = self.Kd * (deltaError/deltaTime) #FIXME: make sure of how the time is used         
+                self.dComponent = np.multiply(self.Kd, (deltaError/deltaTime))          
+    
 
             PID = self.pComponent + self.iComponent + self.dComponent 
 
             # Update times and errors
             self.setLastTime(currentTime)
             self.setLastError(error)
+
+            # print ("Command: {0}".format(PID))
 
             return PID
 
