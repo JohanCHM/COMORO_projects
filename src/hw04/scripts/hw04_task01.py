@@ -29,9 +29,9 @@ class OdometryDrone:
         # Proportional parameters XYZrpy
         kp = np.array([0.05, 0.05, 0.2, 0, 0, 0])
         # Integral parameters XYZrpy
-        ki = np.array([0.01, 0.01, 0, 0, 0, 0])
+        ki = np.array([0.01, 0.01, 0.01, 0, 0, 0])
         # Proportional parameters XYZrpy
-        kd = np.array([0.03, 0.03, 0, 0, 0, 0])
+        kd = np.array([0.05, 0.05, 0, 0.01, 0, 0])
 
         samplingTime = 0.1  # 100 [ms]
 
