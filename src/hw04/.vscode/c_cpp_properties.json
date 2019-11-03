@@ -12,8 +12,13 @@
                 "/usr/include/**"
             ],
             "name": "ROS",
+<<<<<<< HEAD
             "intelliSenseMode": "msvc-x64",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.23.28105/bin/Hostx64/x64/cl.exe",
+=======
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+>>>>>>> cbc188656b093021d0f0b9910b872c6fe6925746
             "cStandard": "c11",
             "cppStandard": "c++17"
         }
