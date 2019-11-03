@@ -27,9 +27,9 @@ class OdometryDrone:
         #----- Modifiable Parameters
         # PID controller
         # Proportional parameters XYZrpy
-        kp = np.array([0.05, 0.05, 0.2, 0, 0, 0])
+        kp = np.array([0.05, 0.04, 0.15, 0, 0, 0])
         # Integral parameters XYZrpy
-        ki = np.array([1, 1, 1, 0, 0, 1])
+        ki = np.array([0.025, 0.0, 0.0, 0, 0, 0])
         # Proportional parameters XYZrpy
         kd = np.array([1, 1, 1, 0, 0, 1])
 
@@ -50,7 +50,7 @@ class OdometryDrone:
         # ----- Initialization stage
         self.controller = PID()  # controller
         self.controller.setKp(kp)
-        # self.controller.setKi(ki)
+        self.controller.setKi(ki)
         # self.controller.setKd(kd)
         self.controller.setSamplingTime(samplingTime)
 
