@@ -48,6 +48,7 @@ class PID:
 
         self.setSetPoint(np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
         self.clear()    # Set all the values to 0
+        self.setLastTime(0) # Initialize time
 
     def controll(self, currentVector, currentTime):
         """Get the controlled output depending on the currentVector
@@ -61,16 +62,12 @@ class PID:
         """
 
         deltaTime = currentTime - self.getLastTime()
-        # print ("LastT: {0}".format(self.getLastTime()))
-        # print ("CurrentT: {0}".format(currentTime))
-        # print ("delta: {0}".format(deltaTime))
 
+        if (deltaTime > 2* self.getSamplingTime()):
+            deltaTime = 2* self.getSamplingTime()
 
         error = self.setPoint - currentVector
         deltaError = error - self.getLastError()
-
-        # print ("Target: {0}".format(self.setPoint))
-        # print ("Current: {0}".format(currentVector))
 
         if (deltaTime >= self.getSamplingTime()):
             # Proportional part
@@ -80,11 +77,6 @@ class PID:
             self.integral += error * deltaTime 
             print(deltaTime)
             self.iComponent = np.multiply(self.Ki, self.integral)
-            print("Error: {0}".format(error[0:3]))
-            print("DeltaT: {0}".format(deltaTime))
-            print("ModIntegral: {0}".format(self.integral[0:3]))
-            print("Ki: {0}".format(self.getKi()[0:3]))
-            print ("iCompon: {0}".format(self.iComponent[0:3]))
 
 
             # Derivative part

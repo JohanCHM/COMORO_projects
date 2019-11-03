@@ -29,21 +29,21 @@ class OdometryDrone:
         # Proportional parameters XYZrpy
         kp = np.array([0.05, 0.05, 0.2, 0, 0, 0])
         # Integral parameters XYZrpy
-        ki = np.array([0.025, 0.0, 0.025, 0, 0, 0])
+        ki = np.array([0.01, 0.01, 0, 0, 0, 0])
         # Proportional parameters XYZrpy
-        kd = np.array([0.01, 0.01, 1, 0, 0, 0])
+        kd = np.array([0.03, 0.03, 0, 0, 0, 0])
 
         samplingTime = 0.1  # 100 [ms]
 
         self.waypoints = [np.array([0, 0, 2, 0, 0, np.deg2rad(30)]),
-                          np.array([0, 6, 2, 0, 0, np.deg2rad(0)]),
+                          np.array([6, 0, 2, 0, 0, np.deg2rad(60)]),
                           np.array([6, 6, 2, 0, 0, np.deg2rad(45)]),
-                          np.array([6, 0, 2, 0, 0, np.deg2rad(60)])]
+                          np.array([0, 6, 2, 0, 0, np.deg2rad(0)])      ]
 
         self.freqTopic = 10  # Frequency of topic messages
 
         self.stableTime = 5  # Time in the vecinity of target waypoint 5[s]
-        self.inReach = 0.2    # Distance to be considered in the vecinity of the waypoint
+        self.inReach = 0.1    # Distance to be considered in the vecinity of the waypoint
 
         self.fileName = "hw04_task01.csv"    # Name of the file to save the data
 
@@ -51,8 +51,8 @@ class OdometryDrone:
         self.controller = PID()  # controller
         self.controller.setKp(kp)
         self.controller.setKi(ki)
+        self.controller.setKd(kd)
 
-        # self.controller.setKd(kd)
         self.controller.setSamplingTime(samplingTime)
 
         self.waypointIndex = 0      # Index to track current waypoints
@@ -114,7 +114,6 @@ class OdometryDrone:
 
         # every time the odometry filtered is received the control parameters get updated
         # Initialize time of controller
-        self.controller.setLastTime(rospy.Time.now().to_time())
         while not rospy.is_shutdown():
             print("----")
             self.poseForControlSubscriber = rospy.Subscriber(
@@ -207,8 +206,8 @@ class OdometryDrone:
 
         # print("X:{x} Y:{y} Z: {r} PSI:{p}".format(
         #     x=dronePosInertial[0], y=dronePosInertial[1], r=dronePosInertial[2], p=(dronePosInertial[3]*180/math.pi)))
-        # print("Goal: {g} Average Distance: {a} Distances averaged: {l}".format(
-        #     g=self.controller.getSetPoint(), a=average, l=len(self.thresholdList)))
+        print("Goal: {g} Average Distance: {a} Distances averaged: {l}".format(
+            g=self.controller.getSetPoint(), a=average, l=len(self.thresholdList)))
        
         # Saving to file
 
