@@ -29,7 +29,7 @@ class OdometryDrone:
         # Proportional parameters XYZrpy
         kp = np.array([0.05, 0.04, 0.15, 0, 0, 0])
         # Integral parameters XYZrpy
-        ki = np.array([0.025, 0.0, 0.0, 0, 0, 0])
+        ki = np.array([0.02, 0.0, 0.0, 0, 0, 0])
         # Proportional parameters XYZrpy
         kd = np.array([1, 1, 1, 0, 0, 1])
 
@@ -51,6 +51,7 @@ class OdometryDrone:
         self.controller = PID()  # controller
         self.controller.setKp(kp)
         self.controller.setKi(ki)
+
         # self.controller.setKd(kd)
         self.controller.setSamplingTime(samplingTime)
 
@@ -112,6 +113,8 @@ class OdometryDrone:
         self.takeoff(5)
 
         # every time the odometry filtered is received the control parameters get updated
+        # Initialize time of controller
+        self.controller.setLastTime(rospy.Time.now().to_time())
         while not rospy.is_shutdown():
             print("----")
             self.poseForControlSubscriber = rospy.Subscriber(
@@ -167,7 +170,6 @@ class OdometryDrone:
         """"Control the drone"""
 
         dronePosInertial = self.odometryMsg2InertialCoordinates(message)
-
         # print(dronePosInertial)
 
         ctrlOutput = self.controller.controll(dronePosInertial, rospy.Time.now().to_time())
@@ -203,11 +205,11 @@ class OdometryDrone:
                 self.waypointIndex = 0
             self.controller.setSetPoint(self.waypoints[self.waypointIndex])
 
-        print("X:{x} Y:{y} Z: {r} PSI:{p}".format(
-            x=dronePosInertial[0], y=dronePosInertial[1], r=dronePosInertial[2], p=(dronePosInertial[3]*180/math.pi)))
-        print("Goal: {g} Average Distance: {a} Distances averaged: {l}".format(
-            g=self.controller.getSetPoint(), a=average, l=len(self.thresholdList)))
-
+        # print("X:{x} Y:{y} Z: {r} PSI:{p}".format(
+        #     x=dronePosInertial[0], y=dronePosInertial[1], r=dronePosInertial[2], p=(dronePosInertial[3]*180/math.pi)))
+        # print("Goal: {g} Average Distance: {a} Distances averaged: {l}".format(
+        #     g=self.controller.getSetPoint(), a=average, l=len(self.thresholdList)))
+       
         # Saving to file
 
         # dronePosInertial.append(distance)
