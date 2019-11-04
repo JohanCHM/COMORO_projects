@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 #
-# title           :PID.py
-# description     :Python pid controller for 3 element vectors
+# title           :hw04_task01.py
+# description     :Program to fly with a specified yaw angle in each line using
+#                  a PID controller and visiting a sequence of waypoints.
 # author          :Carlos Hansen
 # date            :28-11-2019
 # pythonVersion   :2.7.15
@@ -27,18 +28,18 @@ class OdometryDrone:
         #----- Modifiable Parameters
         # PID controller
         # Proportional parameters XYZrpy
-        kp = np.array([0.05, 0.05, 0.2, 0, 0, 0])
+        kp = np.array([0.15, 0.15, 0.2, 0, 0, 0.15])
         # Integral parameters XYZrpy
-        ki = np.array([0.01, 0.01, 0.01, 0, 0, 0])
+        ki = np.array([0.01, 0.01, 0.01, 0, 0, 0.01])
         # Proportional parameters XYZrpy
-        kd = np.array([0.075, 0.075, 0, 0.01, 0, 0])
+        kd = np.array([0.25, 0.25, 0.01, 0, 0, 0.25])
 
         samplingTime = 0.1  # 100 [ms]
 
         self.waypoints = [np.array([0, 0, 2, 0, 0, np.deg2rad(30)]),
-                          np.array([6, 0, 2, 0, 0, np.deg2rad(60)]),
+                          np.array([0, 6, 2, 0, 0, np.deg2rad(30)]),
                           np.array([6, 6, 2, 0, 0, np.deg2rad(45)]),
-                          np.array([0, 6, 2, 0, 0, np.deg2rad(0)])      ]
+                          np.array([6, 0, 2, 0, 0, np.deg2rad(60)])]
 
         self.freqTopic = 10  # Frequency of topic messages
 
@@ -52,6 +53,8 @@ class OdometryDrone:
         self.controller.setKp(kp)
         self.controller.setKi(ki)
         self.controller.setKd(kd)
+
+        np.set_printoptions(precision=3) # to print numpy
 
         self.controller.setSamplingTime(samplingTime)
 
@@ -90,17 +93,17 @@ class OdometryDrone:
         self.bebopAngled = initialInertialCoord[3]
 
         # ------ Visualization of trajectories for RVIZ
-        # self.rvizMsg = nav_msgs.msg.Odometry()
-        # self.rvizHeader = std_msgs.msg.Header()
-        # self.rvizHeader.frame_id = "/odom"
+        self.rvizMsg = nav_msgs.msg.Odometry()
+        self.rvizHeader = std_msgs.msg.Header()
+        self.rvizHeader.frame_id = "/odom"
 
         # Publisher for visualization
-        # self.rvizPub = rospy.Publisher(
-        #     'drone_odometry', nav_msgs.msg.Odometry, queue_size=10)
+        self.rvizPub = rospy.Publisher(
+            'drone_odometry', nav_msgs.msg.Odometry, queue_size=10)
 
         # Subscriber to check for every pose into a messge for rviz
-        # self.rvizSubscriber = rospy.Subscriber(
-        #     'bebop/odom', nav_msgs.msg.Odometry, self.robotPosOr)
+        self.rvizSubscriber = rospy.Subscriber(
+            'bebop/odom', nav_msgs.msg.Odometry, self.robotPosOr)
 
         # ------ Update target
         # Subscriber to check if the corner had been reach and change the goal corner to go
@@ -115,7 +118,7 @@ class OdometryDrone:
         # every time the odometry filtered is received the control parameters get updated
         # Initialize time of controller
         while not rospy.is_shutdown():
-            print("----")
+            # print("----")
             self.poseForControlSubscriber = rospy.Subscriber(
                 'bebop/odom', nav_msgs.msg.Odometry, self.droneController)
             self.rate.sleep()
@@ -204,48 +207,45 @@ class OdometryDrone:
                 self.waypointIndex = 0
             self.controller.setSetPoint(self.waypoints[self.waypointIndex])
 
-        # print("X:{x} Y:{y} Z: {r} PSI:{p}".format(
-        #     x=dronePosInertial[0], y=dronePosInertial[1], r=dronePosInertial[2], p=(dronePosInertial[3]*180/math.pi)))
-        print("Goal: {g} Average Distance: {a} Distances averaged: {l}".format(
-            g=self.controller.getSetPoint(), a=average, l=len(self.thresholdList)))
+        print("X:{x} Y:{y} Z: {r} PSI:{p}".format(
+            x=dronePosInertial[0], y=dronePosInertial[1], r=dronePosInertial[2], p=np.rad2deg(dronePosInertial[5])))
+        # print("Goal: {g} Average Distance: {a} ".format(g=self.controller.getSetPoint()[0:3], a=average))
        
         # Saving to file
 
-        # dronePosInertial.append(distance)
-        dataToSave = dronePosInertial
-
-        # print(dataToSave)
+        dataToSave = np.append(dronePosInertial, distance)
+        print(dataToSave)
 
         with open(self.fileName, mode='a') as data_file:
             file_writter = csv.writer(
                 data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             file_writter.writerow(dataToSave)
 
-    # def robotPosOr(self, message):
-    #     """Visualization of the odometry nav msgs/Odometry"""
-    #     dronePosInertial = self.odometryMsg2InertialCoordinates(message)
+    def robotPosOr(self, message):
+        """Visualization of the odometry nav msgs/Odometry"""
+        dronePosInertial = self.odometryMsg2InertialCoordinates(message)
 
-    #     # constructing poses part of the message
-    #     self.rvizMsg.pose.pose.position.x = dronePosInertial[0]
-    #     self.rvizMsg.pose.pose.position.y = dronePosInertial[1]
-    #     self.rvizMsg.pose.pose.position.z = dronePosInertial[2]
+        # constructing poses part of the message
+        self.rvizMsg.pose.pose.position.x = dronePosInertial[0]
+        self.rvizMsg.pose.pose.position.y = dronePosInertial[1]
+        self.rvizMsg.pose.pose.position.z = dronePosInertial[2]
 
-    #     # Orientations into quaternions
-    #     quat = tf.transformations.quaternion_from_euler(
-    #         0, 0, dronePosInertial[3] - self.bebopAngled, 'ryxz')
+        # Orientations into quaternions
+        quat = tf.transformations.quaternion_from_euler(
+            0, 0, dronePosInertial[5], 'ryxz')
 
-    #     # constructing orientation part of the message
-    #     self.rvizMsg.pose.pose.orientation.x = quat[0]
-    #     self.rvizMsg.pose.pose.orientation.y = quat[1]
-    #     self.rvizMsg.pose.pose.orientation.z = quat[2]
-    #     self.rvizMsg.pose.pose.orientation.w = quat[3]
+        # constructing orientation part of the message
+        self.rvizMsg.pose.pose.orientation.x = quat[0]
+        self.rvizMsg.pose.pose.orientation.y = quat[1]
+        self.rvizMsg.pose.pose.orientation.z = quat[2]
+        self.rvizMsg.pose.pose.orientation.w = quat[3]
 
-    #     # Update of the Header
-    #     self.rvizHeader.stamp = rospy.Time.now()
-    #     self.rvizMsg.header = self.rvizHeader
+        # Update of the Header
+        self.rvizHeader.stamp = rospy.Time.now()
+        self.rvizMsg.header = self.rvizHeader
 
-    #     # Publish
-    #     self.rvizPub.publish(self.rvizMsg)
+        # Publish
+        self.rvizPub.publish(self.rvizMsg)
 
     @staticmethod
     def odometryMsg2InertialCoordinates(message):

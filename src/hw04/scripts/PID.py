@@ -75,7 +75,6 @@ class PID:
 
             # Integral part
             self.integral += error * deltaTime 
-            print(deltaTime)
             self.iComponent = np.multiply(self.Ki, self.integral)
 
 
