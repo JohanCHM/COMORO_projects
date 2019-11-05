@@ -10,6 +10,9 @@
 from PID import PID
 import numpy as np
 import rospy
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Image
 import tf                   # transformation between euler and quaternions
 import nav_msgs.msg
 import sensor_msgs.msg
@@ -36,10 +39,10 @@ class OdometryDrone:
 
         samplingTime = 0.1  # 100 [ms]
 
-        self.waypoints = [np.array([0, 0, 2, 0, 0, np.deg2rad(30)]),
-                          np.array([0, 6, 2, 0, 0, np.deg2rad(30)]),
-                          np.array([6, 6, 2, 0, 0, np.deg2rad(45)]),
-                          np.array([6, 0, 2, 0, 0, np.deg2rad(60)])]
+        self.waypoints = [np.array([0, 0, 2, 0, 0, 0]),
+                          np.array([0, 6, 2, 0, 0, 0]),
+                          np.array([6, 6, 2, 0, 0, 0]),
+                          np.array([6, 0, 2, 0, 0, 0])]
 
         self.freqTopic = 10  # Frequency of topic messages
 
@@ -51,8 +54,8 @@ class OdometryDrone:
         # ----- Initialization stage
         self.controller = PID()  # controller
         self.controller.setKp(kp)
-        # self.controller.setKi(ki)
-        # self.controller.setKd(kd)
+        self.controller.setKi(ki)
+        self.controller.setKd(kd)
 
         np.set_printoptions(precision=3) # to print numpy
 
@@ -75,6 +78,15 @@ class OdometryDrone:
         # Initialize the node
         rospy.init_node('drone_controller', anonymous=True)
         self.rate = rospy.Rate(self.freqTopic)  # 10hz
+
+        # Initialize CV Bridge
+        # self.bridge = CvBridge()
+
+        # # Subscriber to retrieve raw ROS image
+        # self.imageSub = rospy.Subscriber('/bebop/image_raw',Image, self.imageCallback)
+
+        # #Publisher for the IMG
+        # self.image_pub = rospy.Publisher("image_topic_2",Image)
 
         # To control the position
         self.cmdMsg = geometry_msgs.msg.Twist()
@@ -246,6 +258,26 @@ class OdometryDrone:
 
         # Publish
         self.rvizPub.publish(self.rvizMsg)
+
+    def imageCallback(self, msg):
+        # image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        except CvBridgeError as e:
+            print(e)
+
+        (rows,cols,channels) = cv_image.shape
+        if cols > 60 and rows > 60 :
+            cv2.circle(cv_image, (50,50), 10, 255)
+
+        cv2.imshow("Image window", cv_image)
+        cv2.waitKey(3)
+
+        try:
+            self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+        except CvBridgeError as e:
+            print(e)
 
     @staticmethod
     def odometryMsg2InertialCoordinates(message):

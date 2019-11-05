@@ -28,8 +28,22 @@
 
     > Check that you are connected to Internet if not it will fail
 
+    Empty world
+
     ```bash
     sphinx /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
+    ```
+
+    World with a wall
+    
+    ```bash
+    sphinx /home/carlos/COMORO_projects/src/hw04/src/wall1.world  /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone
+    ```
+
+    With the video
+
+    ```bash
+    sphinx /home/carlos/COMORO_projects/src/hw04/src/wall1.world  /opt/parrot-sphinx/usr/share/sphinx/drones/bebop2.drone --enable-video
     ```
 
 ## Launch the drone
