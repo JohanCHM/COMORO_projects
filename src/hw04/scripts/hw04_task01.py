@@ -46,13 +46,13 @@ class OdometryDrone:
         self.stableTime = 5  # Time in the vecinity of target waypoint 5[s]
         self.inReach = 0.1    # Distance to be considered in the vecinity of the waypoint
 
-        self.fileName = "hw04_task01.csv"    # Name of the file to save the data
+        self.fileName = "hw04_task01_pid.csv"    # Name of the file to save the data
 
         # ----- Initialization stage
         self.controller = PID()  # controller
         self.controller.setKp(kp)
-        # self.controller.setKi(ki)
-        # self.controller.setKd(kd)
+        self.controller.setKi(ki)
+        self.controller.setKd(kd)
 
         np.set_printoptions(precision=3) # to print numpy
 
